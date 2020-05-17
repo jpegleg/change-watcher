@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+export data=($@)
+
+makefiles () {
+  for file in ${data[*]}; do
+    iter="$(grep $file lookups.csv | tail -n1)"
+    echo " creating $file.dat"
+    echo -n $iter > "$file".dat
+  done
+}
+
+insertredis () {
+  for item in ${data[*]}; do
+    echo -n $(cat "$item".dat) | redis-cli -x set "$item"
+    echo -n $(grep $(cat "$item".dat | cut -d',' -f2) expand.csv | tail -n1) | redis-cli -x set "$item"-expand
+    echo -e "Inserted $item into \e[32mredis\e[0m"
+  done
+}
+
+lookupdat () {
+  echo
+  echo -e "\e[32mPerforming lookups...\e[0m"
+  echo
+  makefiles
+  insertredis
+}
+
+lookupdat || logger "datasorter failed on insert to redis for ${data[*]}"
