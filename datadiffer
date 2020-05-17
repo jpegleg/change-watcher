@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+export data=($@)
+
+pullfromredis () {
+  for item in $(ls *.dat | grep -v lookups.dat | rev | cut -d '.' -f2- | rev); do
+    echo $item
+    status=$(echo "get $item" | redis-cli)
+    echo $status > "$item".pull
+  done
+}
+
+pullfromredis || logger "datadiffer pull from redis failed for ${data[*]}"
