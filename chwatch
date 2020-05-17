@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+mkdir ~/change-watcher 2>/dev/null
+cd ~/change-watcher
+export inputsites=($@)
+which md5 || alias md5=md5sum
+cp lookups.csv lookups.csv.last
+:>lookups.csv
+
+if [ -f chkrun ]; then
+  echo "First run..."
+  for site in ${inputsites[*]}; do
+    ./datadiffer $site
+    ./datasorter $site
+  done
+else
+  echo "Starting..."
+  date > chkrun
+fi
+
+for site in  ${inputsites[*]}; do
+   echo "$site,$(curl https://$site | md5)" >> lookups.csv
+  ./datadiffer $site
+  ./datasorter $site
+done
+
+changes=$(diff lookups.csv lookups.csv.last)
+
+if [ -z "$changes" ]; then
+  echo
+  echo
+  echo -e "\e[32mNo changes detected.\e[0m"
+else
+  echo -e "\e[31mChanges detected!\e[0m"
+  diff lookups.csv lookups.csv.last
+  stamp=$(date +%Y%m%d%H%M%S)
+  for dat in $(ls *.dat); do
+    sitex=$(echo $dat | rev | cut -d '.' -f2- | rev)
+    ./recon-proc $sitex &
+  done
+  sleep 29
+  tar czvf changes."$stamp".tgz ./lookups.csv ./lookups.csv.last ./*.dat ./expand.csv ./*.txt ~/ship/*
+  rm -f ~/ship/*
+fi
