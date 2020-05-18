@@ -2,7 +2,9 @@
 Store response hashes in redis, curate response data. Trigger checks on change.
 
 Current version is developed for running on FreeBSD, but I'm using the approach of try BSD
-variation first, then fail back to linux variation. 
+variation first, then fail back to linux variation. There are other aspects of "fall back" logic
+here, including if no email.trigger file is created by you, then the behavior will be to scp
+the report data to the value in the report.server file.
 
 You can curate or generate another file 
 
@@ -68,3 +70,12 @@ uses openssl s_client -connect $value:443 which does not use URI context before 
 Example crontab
 
 0-59 * * * * /usr/local/bin/chkwatch myapi.com emailserver-1 parter-server-4.partnerplace.com 10.2.1.13 10.3.1.13
+
+Then your front end app (not included here) can query redis for the health status data rather than the endpoint,
+reducing and positioning health checking to increase network scale.
+If you don't have a font end app that cares about the health check data, you
+can just use a terminal session instead, like 
+
+echo "get 10.2.1.13-expand" | redis-cli
+
+:)
