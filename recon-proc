@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# recon-proc for change-watcher
+which mailx || echo "No mailx found, will only use scp to ship to configured report server..."
+export inputsites=($@)
+export reportserver=$(cat report.server)
+
+if [ -f email.trigger ]; then
+  email=$(cat email.trigger)
+else
+  email=root@localhost
+fi
+
+dir=~/change-watcher
+
+mkdir ~/ship 2>/dev/null
+mkdir $dir 2>/dev/null
+
+tls-inspection () {
+  rand=$(openssl rand -hex 18)-1
+  tlshost=$1
+  openssl s_client -connect $tlshost:443 >$dir/tls.out 2>$dir/tls2.out 
+  grep "verify return:1" $dir/tls2.out >$dir/tls.txt
+  grep "CONNECTED..000" $dir/tls.out  >>$dir/tls.txt
+  grep ":error:" $dir/tls2.out >>$dir/tls.txt
+  cat $dir/tls.txt | sed '/^$/d' > $dir/tls.report
+  cat $dir/tls2.out >> $dir/reconproc-report-tls_$rand.txt
+  if [ -s $dir/tls.report ]; then
+    echo "Recon-proc REPORT - openssl tests $abr" >>$dir/reconproc-report-tls_$rand.txt
+    echo >>$dir/reconproc-report-tls_$rand.txt
+    cat $dir/tls.report >>$dir/reconproc-report-tls_$rand.txt
+    echo >>$dir/reconproc-report-tls_$rand.txt
+    cd $dir
+    echo "report" | mailx -A reconproc-report-tls_$rand.txt -s "report" $(cat email.trigger) || scp $dir/reconproc-report-tls_$rand.txt "$reportserver"
+    cp $dir/reconproc-report-tls_$rand.txt ~/ship/
+    cp /dev/null $dir/reconproc-report-tls_$rand.txt
+    rm -f $dir/reconproc-report-tls_$rand.txt
+    cp /dev/null $dir/tls.report
+  else
+    cp /dev/null $dir/reconproc-report-tls_$rand.txt
+  else
+    cp /dev/null $dir/reconproc-report-tls_$rand.txt
+    rm -f $dir/reconproc-report-tls_$rand.txt
+    cp /dev/null $dir/tls.report
+  fi
+}
+
+main () {
+  for i in $(echo ${inputsites[*]} | sed 's/.dat$//g'); do
+    echo "Checking tls for $i"
+    abr=$i
+    tls-inspection $i &
+    echo "$(date +%Y%m%d-%H:%M:%S) Done at with $i ..."
+  done
+}
+
+main || logger "recon-proc main function error code $?"
+rm -f ~/ship/*.txt
