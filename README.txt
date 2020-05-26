@@ -57,12 +57,13 @@ Learn those hash responses to the different conditions, map them to your expand.
 If you want to change the curl to do a POST for an API etc, easy enough to add in :)
 
 When a change happens, we trigger the recon-proc that will do analysis on:
-
-- local gateway ICMP
 - debug TLS interaction with targets
-- target ICMP
+# arbitrary scripts can be plugged in here as well
+# but I have found that with just openssl tls debug
+# I can detect all of the outage conditions I'm
+# interested in reporting.
 
-
+...
 
 Do not pass URI contexts in like /something or thing/something, the TLS iteraction will fail because it
 uses openssl s_client -connect $value:443 which does not use URI context before the :443
