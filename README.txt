@@ -61,7 +61,7 @@ When a change happens, we trigger the recon-proc that will do analysis on:
 # arbitrary scripts can be plugged in here as well
 # but I have found that with just openssl tls debug
 # I can detect all of the outage conditions I'm
-# interested in reporting.
+# interested in reporting at this level (network and tls)
 
 ...
 
