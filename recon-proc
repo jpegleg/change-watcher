@@ -37,8 +37,6 @@ tls-inspection () {
     cp /dev/null $dir/tls.report
   else
     cp /dev/null $dir/reconproc-report-tls_$rand.txt
-  else
-    cp /dev/null $dir/reconproc-report-tls_$rand.txt
     rm -f $dir/reconproc-report-tls_$rand.txt
     cp /dev/null $dir/tls.report
   fi
