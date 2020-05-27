@@ -46,7 +46,7 @@ main () {
   for i in $(echo ${inputsites[*]} | sed 's/.dat$//g'); do
     echo "Checking tls for $i"
     abr=$i
-    tls-inspection $i &
+    tls-inspection $i
     echo "$(date +%Y%m%d-%H:%M:%S) Done at with $i ..."
   done
 }
